@@ -119,7 +119,7 @@ class OptimizedTelegramScraper:
 
         channel_dir = Path(os.getcwd()) / channel
         media_folder = channel_dir / 'media'
-        media_folder.mkdir(exist_ok=True)
+        media_folder.mkdir(parents=True, exist_ok=True)  # ensure all parent dirs created
         
         media_file_name = None
         if isinstance(message.media, MessageMediaPhoto):
@@ -511,4 +511,5 @@ if __name__ == '__main__':
         asyncio.run(main())
     except KeyboardInterrupt:
         print("\nProgram interrupted. Exiting...")
+
         sys.exit()
