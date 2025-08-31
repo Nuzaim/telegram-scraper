@@ -167,14 +167,14 @@ class OptimizedTelegramScraper:
                     (media_path, message_id))
         conn.commit()
 
-    async def scrape_channel(self, channel: str, offset_id: int):
+    async def scrape_channel(self, channel: str, offset_id: int, search: str):
         try:
             if channel.startswith('-'):
                 entity = await self.client.get_entity(PeerChannel(int(channel)))
             else:
                 entity = await self.client.get_entity(channel)
 
-            result = await self.client.get_messages(entity, offset_id=offset_id, reverse=True, limit=0)
+            result = await self.client.get_messages(entity, offset_id=offset_id, reverse=True, limit=0, search=search)
             total_messages = result.total
 
             if total_messages == 0:
@@ -190,7 +190,7 @@ class OptimizedTelegramScraper:
 
             download_semaphore = asyncio.Semaphore(self.max_concurrent_downloads)
 
-            async for message in self.client.iter_messages(entity, offset_id=offset_id, reverse=True):
+            async for message in self.client.iter_messages(entity, offset_id=offset_id, reverse=True, search=search):
                 try:
                     sender = await message.get_sender()
                     
@@ -318,7 +318,7 @@ class OptimizedTelegramScraper:
                         break
                         
                     print(f"\nChecking for new messages in channel: {channel}")
-                    await self.scrape_channel(channel, self.state['channels'][channel])
+                    await self.scrape_channel(channel, self.state['channels'][channel], search="")
                 
                 elapsed = time.time() - start_time
                 sleep_time = max(0, 60 - elapsed)
@@ -452,8 +452,9 @@ class OptimizedTelegramScraper:
                         print(f"Channel {channel} not found.")
                         
                 case 's':
+                    search = input("Enter search string: ").lower()
                     for channel in self.state['channels']:
-                        await self.scrape_channel(channel, self.state['channels'][channel])
+                        await self.scrape_channel(channel, self.state['channels'][channel], search)
                         
                 case 'm':
                     self.state['scrape_media'] = not self.state['scrape_media']
